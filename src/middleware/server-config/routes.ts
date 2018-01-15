@@ -74,6 +74,13 @@ const models: TsoaRoute.Models = {
             "label": { "dataType": "string" },
         },
     },
+    "ISendMoney": {
+        "properties": {
+            "senderWalletId": { "dataType": "string", "required": true },
+            "receiverWalletId": { "dataType": "string", "required": true },
+            "amount": { "dataType": "double", "required": true },
+        },
+    },
     "IPeerUpdatedResponseDataObj": {
         "properties": {
             "hash": { "dataType": "string", "required": true },
@@ -349,6 +356,27 @@ export function RegisterRoutes(app: any) {
 
 
             const promise = controller.getBalanceByAddress.apply(controller, validatedArgs);
+            promiseHandler(controller, promise, response, next);
+        });
+    app.post('/api/merchant/wallet/send-coin',
+        authenticateMiddleware([{ "name": "api_key" }]),
+        function(request: any, response: any, next: any) {
+            const args = {
+                body: { "in": "body", "name": "body", "required": true, "ref": "ISendMoney" },
+                request: { "in": "request", "name": "request", "required": true, "dataType": "object" },
+            };
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new WalletController();
+
+
+            const promise = controller.sendMoneyToWalletId.apply(controller, validatedArgs);
             promiseHandler(controller, promise, response, next);
         });
     app.post('/api/peer',

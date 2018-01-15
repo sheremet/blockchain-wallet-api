@@ -15,3 +15,9 @@ export interface IWalletSchemaUpdate {
   password?: string;
   label?: string;
 }
+
+export interface ISendMoney {
+  senderWalletId: string;
+  receiverWalletId: string;
+  amount: number;
+}

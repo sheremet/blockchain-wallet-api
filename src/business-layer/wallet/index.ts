@@ -1,1 +1,1 @@
-export {IWalletSchema, IWallet, IWalletSchemaUpdate} from './IWallet';
+export {IWalletSchema, IWallet, IWalletSchemaUpdate, ISendMoney} from './IWallet';

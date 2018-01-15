@@ -16,7 +16,6 @@ import {
   IPeerCreatedResponse, IErrorResponse, ISuccessResponse, IPeerUpdatedResponse,
   ICreatedResponse, IUpdatedResponse
 } from '../responses';
-import {IPeer} from '../../business-layer/peer';
 import {IPeerUpdatedResponseDataObj} from '../responses/IPeerUpdatedResponse';
 import {IPeerCreatedResponseDataObj} from '../responses/IPeerCreatedResponse';
 

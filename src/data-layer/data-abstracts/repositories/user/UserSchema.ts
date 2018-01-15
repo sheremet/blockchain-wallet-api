@@ -61,7 +61,7 @@ const UserSchema: Schema = new MongooseAccess.mongooseInstance.Schema({
 
 });
 
-UserSchema.pre('save', function (next: any) {
+UserSchema.pre('save', (next: any) => {
   if (this._doc) {
     const doc = this._doc as IUserDocument;
     const now = getCurrentDateTime();

@@ -1,6 +1,6 @@
 import {logger} from '../../middleware/common/logging';
 import {IWalletDocument, WalletRepo, WalletSchema} from '../data-abstracts/repositories/wallet';
-import {IWallet, IWalletSchema, IWalletSchemaUpdate} from '../../business-layer/wallet';
+import {ISendMoney, IWallet, IWalletSchema, IWalletSchemaUpdate} from '../../business-layer/wallet';
 import {AddressRepo} from '../data-abstracts/repositories/address';
 import {IErrorResponse} from '../../service-layer/responses';
 import {WalletModel} from '../models/WalletModel';
@@ -125,7 +125,7 @@ export class WalletDataAgent {
     const result = await AddressRepo.find().where('address.walletId', walletId);
     if (!result) {
       throw {
-        throw: true,
+        thrown: true,
         success: false,
         status: 404,
         message: 'Addresses not found'
@@ -143,7 +143,7 @@ export class WalletDataAgent {
       return Promise.resolve(data);
     }).catch((err) => {
       throw {
-        throw: true,
+        thrown: true,
         success: false,
         status: 404,
         message: 'Transactions not found'
@@ -152,21 +152,80 @@ export class WalletDataAgent {
   }
 
   async getBalanceByAddress(address: string): Promise<any> {
-    const peerAddress = await this.getRandomPeerAddress();
-    return axiosInst(peerAddress).get(`/blockchain/balance/${address}`)
-      .then(({data}) => {
-        return Promise.resolve(data);
-      }).catch((err) => {
+    return this.getBalanceByAddressModel(address).then(({data}) => {
+      return Promise.resolve(data);
+    }).catch((err) => {
+      throw {
+        thrown: true,
+        success: false,
+        status: 404,
+        message: 'No Transactions for this address',
+        data: {
+          balance: 0
+        }
+      };
+    });
+  }
+
+  async sendPayment(payment: ISendMoney, userId: string) {
+    const {senderWalletId, amount, receiverWalletId} = payment;
+    const senderWallet = await WalletRepo.findOne().where({
+      'wallet.walletId': senderWalletId,
+      'wallet.userId': userId
+    });
+    const receiverWallet = await WalletRepo.findOne().where({
+      'wallet.walletId': receiverWalletId
+    });
+
+    if (senderWallet && receiverWallet) {
+      const {address: senderAddress} = new WalletModel(senderWallet).getOwnerWalletModel();
+      const balanceResponse = await this.getBalanceByAddressModel(senderAddress);
+      const {data: {balance}} = balanceResponse.data;
+      logger.info('balanceResponse', balance);
+      if (balance > amount) {
+        const peerAddress = await this.getRandomPeerAddress();
+        const {address: receiverAddress} = new WalletModel(receiverWallet).getOwnerWalletModel();
+        return axiosInst(peerAddress).post(`/blockchain/transaction`, {
+          from: senderAddress,
+          to: receiverAddress,
+          amount
+        }).then(({data}) => {
+          logger.info('/blockchain/transaction:data', data);
+          return Promise.resolve(data.data);
+        }).catch((e) => {
+          throw {
+            thrown: true,
+            success: false,
+            status: 500,
+            message: 'Payment not processed'
+          };
+        });
+      } else {
         throw {
-          throw: true,
+          thrown: true,
           success: false,
-          status: 404,
-          message: 'No Transactions for this address',
+          status: 400,
+          message: 'You have less coins then in payment amount',
           data: {
-            balance: 0
+            balance,
+            paymentAmount: amount
           }
         };
-      });
+      }
+
+    } else {
+      throw {
+        thrown: true,
+        success: false,
+        status: 404,
+        message: 'Wallet with this payment information does not exist'
+      };
+    }
+  }
+
+  private async getBalanceByAddressModel(address: string): Promise<any> {
+    const peerAddress = await this.getRandomPeerAddress();
+    return axiosInst(peerAddress).get(`/blockchain/balance/${address}`);
   }
 
   private async getRandomPeerAddress(): Promise<any> {
