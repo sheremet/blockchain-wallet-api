@@ -1,0 +1,15 @@
+express:
+    port: 8081
+    debug: 5858
+    host: localhost
+
+auth:
+    jwt_secret: 'SecretForDev'
+
+mongo:
+    urlClient: 'mongodb://localhost:27017/blockchain'
+    urlDocker: 'mongodb://mongo:27017/blockchain'
+
+
+# none/debug/info
+loglevel: info

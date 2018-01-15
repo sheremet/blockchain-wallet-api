@@ -1,0 +1,17 @@
+express:
+    port: EXPRESS_PORT
+    debug: EXPRESS_DEBUG
+    host: EXPRESS_HOST
+
+auth:
+    jwt_secret: JWT_SECRET
+
+mongo:
+    urlClient: MONGODB_URL
+    urlDocker: MONGODB_URL_DOCKER
+
+minerAddress: MINER_ADDRESS
+
+
+# none/debug/info
+loglevel: LOG_LEVEL
