@@ -12,6 +12,8 @@ import {IWalletSchema, IWalletSchemaUpdate} from '../../business-layer/wallet';
 import {ISuccessResponse} from '../responses';
 import {verifyToken} from '../../business-layer/security/token-helpers';
 import {WalletModel} from '../../data-layer/models/WalletModel';
+import {ISendMoney} from '../../business-layer/wallet/IWallet';
+import {validatePayment} from '../../business-layer/validators/send-coins/SendCoinsValidationProcessor';
 
 @Route('merchant')
 export class WalletController extends Controller {
@@ -105,6 +107,38 @@ export class WalletController extends Controller {
   public async getBalanceByAddress(@Path('address') address: string): Promise<ISuccessResponse> {
     const result = await this.walletDataAgent.getBalanceByAddress(address);
     return successResponse(result.data);
+  }
+
+  @Security('api_key')
+  @Post('wallet/send-coin')
+  @Tags('Send coins')
+  public async sendMoneyToWalletId(@Body() body: ISendMoney, @Request() request: Request) {
+    const {receiverWalletId, senderWalletId, amount} = body;
+    if(receiverWalletId === senderWalletId){
+      throw {
+        thrown: true,
+        success: false,
+        status: 400,
+        message: `You can't send coins to seders wallet!`
+      };
+    }
+    const userId = getUserIdFromRequest(request);
+    const validationErrors: any[] = validatePayment(body);
+    logger.info('RegisterNewUser  validationErrors =', validationErrors);
+    if (validationErrors.length > 0) {
+      throw {
+        thrown: true,
+        success: false,
+        status: 400,
+        message: 'Incorrect input data',
+        errors: validationErrorsFormatter(validationErrors)
+      };
+    }
+    const reqData = {...body};
+    const result = await this.walletDataAgent.sendPayment(reqData, userId);
+    if (result) {
+      return successResponse(result);
+    }
   }
 
 }
