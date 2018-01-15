@@ -114,7 +114,7 @@ export class WalletController extends Controller {
   @Tags('Send coins')
   public async sendMoneyToWalletId(@Body() body: ISendMoney, @Request() request: Request) {
     const {receiverWalletId, senderWalletId, amount} = body;
-    if(receiverWalletId === senderWalletId){
+    if (receiverWalletId === senderWalletId) {
       throw {
         thrown: true,
         success: false,

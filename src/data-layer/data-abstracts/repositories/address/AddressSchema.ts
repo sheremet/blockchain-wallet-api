@@ -29,7 +29,7 @@ const AddressSchema = new Schema({
   }
 });
 
-AddressSchema.pre('save', function (next: any) {
+AddressSchema.pre('save', (next: any) => {
   if (this._doc) {
     const doc = this._doc as IAddressDocument;
     const now = getCurrentDateTime();

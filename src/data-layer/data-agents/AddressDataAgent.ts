@@ -52,12 +52,4 @@ export class AddressDataAgent {
     }
   }
 
-  async sendPayment(fromAddress: string, toAddress: string, amount: number) {
-
-  }
-
-  async getBalance(address: string) {
-
-  }
-
 }
